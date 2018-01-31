@@ -13,7 +13,7 @@ Some of the limitations are:
 
 <li>Native rollup summary fields are not accessible on LOOKUP relationships.</li></ul>
 
-In this approach we are using Apex code to rolling up the child information.
+In this approach we are using Apex code to rolling up the child information and SUM into parent field.
 
 <b>Parent Object: Object_A__c</b>
 
