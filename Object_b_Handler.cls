@@ -8,9 +8,9 @@ public class Object_B_Handler
 	Input Parameters - Trigger.New, Trigger.NewMap,Trigger.old, Trigger.oldmap
     Return - void
     ******************************************************************************/
-    public static void updateObject_ARollups(List<Object_B> newList,map<Id,Object_B> newMap,List<Object_B> oldList,map<Id,Object_B> oldMap){
+    public static void updateObject_ARollups(List<Object_B__c> newList,map<Id,Object_B__c> newMap,List<Object_B__c> oldList,map<Id,Object_B__c> oldMap){
         //Set of Con Ids to be Updated
-        Set<Id> setConIds = new Set<Id>();
+        Set<Id> setIds = new Set<Id>();
 
         //Put the exception code to try - catch exceptions
         try{
@@ -19,9 +19,8 @@ public class Object_B_Handler
                 for(Object_B bRec : newList){
                     if(Trigger.isInsert){
                         // COnsider all the Object_B records which are inserted with Object_A populated, valid Amount value 
-                        // and valid Stage Values
                         if(bRec.Object_A__c!=null && bRec.Transaction_Amount__c!=null ){
-                            setConIds.add(bRec.Object_A__c);
+                            setIds.add(bRec.Object_A__c);
                         }
                     }
                     else if(Trigger.isUpdate){
@@ -29,14 +28,14 @@ public class Object_B_Handler
                         if(oldMap.get(bRec.Id).Object_A__c!=bRec.Object_A__c){
                             // If Object_A values are present, then only add to the set
                             if(oldMap.get(bRec.Id).Object_A__c!=null)
-                                setConIds.add(oldMap.get(bRec.Id).Object_A__c);
+                                setIds.add(oldMap.get(bRec.Id).Object_A__c);
                             if(bRec.Object_A__c!=null)
-                                setConIds.add(bRec.Object_A__c);
+                                setIds.add(bRec.Object_A__c);
                         }
                         // Second validation is if Transaction_Status or Transaction Amount is changing on the Object_B, Enter in the if.
                         else if(oldMap.get(bRec.Id).Transaction_Amount__c!=bRec.Transaction_Amount__c ){
                             //Add the Object_A record lookupId from the Object_B
-                            setConIds.add(bRec.Object_A__c);
+                            setIds.add(bRec.Object_A__c);
                         }
                     }
                 }
@@ -46,7 +45,7 @@ public class Object_B_Handler
             if(Trigger.isDelete && oldList!=null){
                 for(Object_B bRec : oldList){
                     if(bRec.Object_A__c!=null)
-                        setConIds.add(bRec.Object_A__c);
+                        setIds.add(bRec.Object_A__c);
                 }
             }
 
@@ -55,9 +54,9 @@ public class Object_B_Handler
             //Variable to hold the Object_A records to be updated
             List<Object_A> updateList = new List<Object_A>();
             //Query through the Oxpportunities and prepare the sum of amount and Object_A to be updated map
-            if(setConIds!=null && setConIds.size()>0){
+            if(setIds!=null && setIds.size()>0){
                 for(AggregateResult aggRec : [Select SUM(Transaction_Amount__c) sum,Object_A__c
-                                         FROM Object_B WHERE Object_A__c IN :setConIds
+                                         FROM Object_B WHERE Object_A__c IN :setIds
                                          AND Transaction_Amount__c!=null GROUP BY Object_A__c]){
                     
                         System.debug('--Object_A__c--'+aggRec.get('Object_A__c'));
@@ -69,13 +68,13 @@ public class Object_B_Handler
 
             // Check if the map size is not null, then query the corresponding Object_A Records and update the Amount value
             if(mapObject_A_Vs_Amount!=null && mapObject_A_Vs_Amount.size()>0){
-                for(Object_A conRec : [SELECT Id,Name, Amount_Invested_as_Primary__c
+                for(Object_A__c aRec : [SELECT Id,Name, Amount_Invested_as_Primary__c
                                     FROM Object_A WHERE Id IN: mapObject_A_Vs_Amount.keyset()]){
                     // Check if the total amount from Opportunities is different from Funded Amount on Object_A, update the Object_A
-                    if(mapObject_A_Vs_Amount.get(conRec.Id)!=conRec.Amount_Invested_as_Primary__c){
-                        conRec.Amount_Invested_as_Primary__c = mapObject_A_Vs_Amount.get(conRec.Id);
+                    if(mapObject_A_Vs_Amount.get(aRec.Id)!=aRec.Amount_Invested_as_Primary__c){
+                        aRec.Amount_Invested_as_Primary__c = mapObject_A_Vs_Amount.get(aRec.Id);
                         // Add the Object_A to the List to update later.
-                        updateList.add(conRec); 
+                        updateList.add(aRec); 
                     }
                 }
             }
@@ -90,8 +89,5 @@ public class Object_B_Handler
             ErrorLogUtility.CreateLogRecs(ex,'Trigger-Object_BBefore','updateObject_ARollups');
         }
     }
-    // Method End - updateObject_ARollups
    
-
-
 }
